@@ -1,0 +1,51 @@
+# DevLoop Configuration
+# Copy this file to the root of your target repository as devloop-config.yaml
+
+# --- Turn Budgets ---
+# Maximum AI turns per phase (controls cost & runtime)
+max_turns:
+  triage: 5      # Issue analysis and root cause hypothesis
+  fix: 15        # Investigation, code fix, and test iteration
+  verify: 5      # Post-deploy smoke test
+
+# --- Test ---
+test_command: "pytest"
+python_version: "3.12"
+
+# --- Branch & Label ---
+label_prefix: "devloop"          # Labels: devloop, devloop:triaging, etc.
+branch_prefix: "devloop/fix"     # Branch: devloop/fix-123
+
+# --- Human Gate ---
+# When true, PRs require human approval before merge.
+# When false, auto-merge if tests pass (use with caution).
+human_gate: true
+
+# --- Deploy ---
+# How DevLoop knows a fix has been deployed.
+# Options:
+#   "label"  — Your CD pipeline adds the devloop:deployed label (recommended)
+#   "none"   — Skip verification phase entirely
+deploy_trigger: "label"
+
+# --- Allowed Tools ---
+# Tools the AI agent can use in each phase.
+# Restrict to minimize blast radius.
+allowed_tools:
+  triage:
+    - Bash
+    - Read
+    - Glob
+    - Grep
+  fix:
+    - Bash
+    - Read
+    - Write
+    - Edit
+    - Glob
+    - Grep
+  verify:
+    - Bash
+    - Read
+    - Glob
+    - Grep
