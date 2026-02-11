@@ -47,6 +47,8 @@ jobs:
             --add-label "devloop:triaging"
 
       - name: Triage with Claude
+        id: triage_claude
+        continue-on-error: true
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -75,16 +77,14 @@ jobs:
                - Remove the triaging label and add the needs-human label.
                - Explain why human intervention is needed.
 
-      - name: Handle triage failure
-        if: failure()
+      - name: Check triage outcome
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Only mark as failed if Claude didn't already advance the state
           LABELS=$(gh issue view ${{ github.event.issue.number }} --json labels --jq '.labels[].name')
           if echo "$LABELS" | grep -q "devloop:ready-to-fix\|devloop:needs-human"; then
-            echo "Claude completed triage before max_turns. Skipping failure handler."
-          else
+            echo "Triage completed successfully."
+          elif [ "${{ steps.triage_claude.outcome }}" = "failure" ]; then
             gh issue edit ${{ github.event.issue.number }} \
               --remove-label "devloop:triaging" \
               --add-label "devloop:failed"
@@ -123,6 +123,8 @@ jobs:
             --add-label "devloop:fixing"
 
       - name: Fix with Claude
+        id: fix_claude
+        continue-on-error: true
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -159,15 +161,14 @@ jobs:
             - Do NOT change dependencies unless strictly necessary for the fix.
             - Stay within the scope of this issue.
 
-      - name: Handle fix failure
-        if: failure()
+      - name: Check fix outcome
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           LABELS=$(gh issue view ${{ github.event.issue.number }} --json labels --jq '.labels[].name')
           if echo "$LABELS" | grep -q "devloop:pr-created"; then
-            echo "Claude created PR before max_turns. Skipping failure handler."
-          else
+            echo "Fix completed successfully — PR created."
+          elif [ "${{ steps.fix_claude.outcome }}" = "failure" ]; then
             gh issue edit ${{ github.event.issue.number }} \
               --remove-label "devloop:fixing" \
               --add-label "devloop:failed"
@@ -199,6 +200,8 @@ jobs:
           if [ -f pyproject.toml ]; then pip install -e ".[dev]" 2>/dev/null || pip install -e .; fi
 
       - name: Verify with Claude
+        id: verify_claude
+        continue-on-error: true
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -224,15 +227,14 @@ jobs:
                  - Body: test failure details and link to the original issue
                  - Add the devloop label to trigger re-investigation
 
-      - name: Handle verify failure
-        if: failure()
+      - name: Check verify outcome
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           LABELS=$(gh issue view ${{ github.event.issue.number }} --json labels --jq '.labels[].name')
           if echo "$LABELS" | grep -q "devloop:verified"; then
-            echo "Claude verified before max_turns. Skipping failure handler."
-          else
+            echo "Verification passed."
+          elif [ "${{ steps.verify_claude.outcome }}" = "failure" ]; then
             gh issue edit ${{ github.event.issue.number }} \
               --add-label "devloop:failed"
             gh issue comment ${{ github.event.issue.number }} \
