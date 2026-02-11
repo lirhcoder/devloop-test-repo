@@ -80,11 +80,17 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue edit ${{ github.event.issue.number }} \
-            --remove-label "devloop:triaging" \
-            --add-label "devloop:failed"
-          gh issue comment ${{ github.event.issue.number }} \
-            --body "DevLoop triage failed. Check [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
+          # Only mark as failed if Claude didn't already advance the state
+          LABELS=$(gh issue view ${{ github.event.issue.number }} --json labels --jq '.labels[].name')
+          if echo "$LABELS" | grep -q "devloop:ready-to-fix\|devloop:needs-human"; then
+            echo "Claude completed triage before max_turns. Skipping failure handler."
+          else
+            gh issue edit ${{ github.event.issue.number }} \
+              --remove-label "devloop:triaging" \
+              --add-label "devloop:failed"
+            gh issue comment ${{ github.event.issue.number }} \
+              --body "DevLoop triage failed. Check [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
+          fi
 
   # ──────────────────────────────────────────────
   # Phase 2: Fix
@@ -158,11 +164,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue edit ${{ github.event.issue.number }} \
-            --remove-label "devloop:fixing" \
-            --add-label "devloop:failed"
-          gh issue comment ${{ github.event.issue.number }} \
-            --body "DevLoop fix attempt failed. Check [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
+          LABELS=$(gh issue view ${{ github.event.issue.number }} --json labels --jq '.labels[].name')
+          if echo "$LABELS" | grep -q "devloop:pr-created"; then
+            echo "Claude created PR before max_turns. Skipping failure handler."
+          else
+            gh issue edit ${{ github.event.issue.number }} \
+              --remove-label "devloop:fixing" \
+              --add-label "devloop:failed"
+            gh issue comment ${{ github.event.issue.number }} \
+              --body "DevLoop fix attempt failed. Check [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
+          fi
 
   # ──────────────────────────────────────────────
   # Phase 3: Verify
@@ -218,7 +229,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue edit ${{ github.event.issue.number }} \
-            --add-label "devloop:failed"
-          gh issue comment ${{ github.event.issue.number }} \
-            --body "DevLoop verification failed. Check [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
+          LABELS=$(gh issue view ${{ github.event.issue.number }} --json labels --jq '.labels[].name')
+          if echo "$LABELS" | grep -q "devloop:verified"; then
+            echo "Claude verified before max_turns. Skipping failure handler."
+          else
+            gh issue edit ${{ github.event.issue.number }} \
+              --add-label "devloop:failed"
+            gh issue comment ${{ github.event.issue.number }} \
+              --body "DevLoop verification failed. Check [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details."
+          fi
