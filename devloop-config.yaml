@@ -4,9 +4,9 @@
 # --- Turn Budgets ---
 # Maximum AI turns per phase (controls cost & runtime)
 max_turns:
-  triage: 5      # Issue analysis and root cause hypothesis
-  fix: 15        # Investigation, code fix, and test iteration
-  verify: 5      # Post-deploy smoke test
+  triage: 10     # Issue analysis and root cause hypothesis
+  fix: 25        # Investigation, code fix, and test iteration
+  verify: 10     # Post-deploy smoke test
 
 # --- Test ---
 test_command: "pytest"

@@ -51,7 +51,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: "--max-turns 5 --allowedTools Read,Glob,Grep,Bash"
+          claude_args: "--max-turns 10 --allowedTools Read,Glob,Grep,Bash"
           prompt: |
             You are triaging issue #${{ github.event.issue.number }}.
 
@@ -121,7 +121,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: "--max-turns 15 --allowedTools Read,Write,Edit,Glob,Grep,Bash"
+          claude_args: "--max-turns 25 --allowedTools Read,Write,Edit,Glob,Grep,Bash"
           prompt: |
             You are fixing issue #${{ github.event.issue.number }}.
 
@@ -192,7 +192,7 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          claude_args: "--max-turns 5 --allowedTools Read,Glob,Grep,Bash"
+          claude_args: "--max-turns 10 --allowedTools Read,Glob,Grep,Bash"
           prompt: |
             You are verifying that issue #${{ github.event.issue.number }} has been fixed.
 
