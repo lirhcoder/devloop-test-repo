@@ -1,4 +1,5 @@
-from src.calculator import add, multiply
+import pytest
+from src.calculator import add, divide, multiply
 
 
 def test_add():
@@ -11,3 +12,12 @@ def test_add_negative():
 
 def test_multiply():
     assert multiply(3, 4) == 12
+
+
+def test_divide():
+    assert divide(10, 2) == 5.0
+
+
+def test_divide_zero_raises_value_error():
+    with pytest.raises(ValueError, match="Cannot divide by zero"):
+        divide(10, 0)
