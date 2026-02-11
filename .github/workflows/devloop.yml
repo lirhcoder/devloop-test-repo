@@ -22,6 +22,7 @@ permissions:
   contents: write
   issues: write
   pull-requests: write
+  id-token: write
 
 jobs:
   # ──────────────────────────────────────────────
@@ -49,8 +50,8 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          max_turns: 5
-          allowed_tools: "Read,Glob,Grep,Bash(pytest:*),Bash(python:*)"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: "--max-turns 5 --allowedTools Read,Glob,Grep,Bash"
           prompt: |
             You are triaging issue #${{ github.event.issue.number }}.
 
@@ -119,8 +120,8 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          max_turns: 15
-          allowed_tools: "Read,Write,Edit,Glob,Grep,Bash(pytest:*),Bash(python:*),Bash(git:*)"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: "--max-turns 15 --allowedTools Read,Write,Edit,Glob,Grep,Bash"
           prompt: |
             You are fixing issue #${{ github.event.issue.number }}.
 
@@ -190,8 +191,8 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          max_turns: 5
-          allowed_tools: "Read,Glob,Grep,Bash(pytest:*),Bash(python:*)"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          claude_args: "--max-turns 5 --allowedTools Read,Glob,Grep,Bash"
           prompt: |
             You are verifying that issue #${{ github.event.issue.number }} has been fixed.
 
